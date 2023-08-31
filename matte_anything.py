@@ -293,116 +293,123 @@ if __name__ == "__main__":
 
         return  mask, alpha, foreground_mask, foreground_alpha, new_bg_1, new_bg_2, new_bg_3
 
-    with gr.Blocks() as demo:
-        gr.Markdown(
-            """
-            # <center>Matte Anything🐒 !
-            """
-        )
-        with gr.Row().style(equal_height=True):
-            with gr.Column():
-                # input image
-                original_image = gr.State(value="numpy")   # store original image without points, default None
-                input_image = gr.Image(type="numpy", label="Input Image")                             
-                # prompt (point or text)
-                # Point Input
-                with gr.Tab(label='Point Input') as Tab1:
-                    with gr.Column():
-                        selected_points = gr.State([])      # store points
-                        radio = gr.Radio(['foreground_point', 'background_point'], label='Point Labels')
-                        with gr.Row():
-                            undo_button = gr.Button('Remove Point')
-                            undo_all_button = gr.Button('Remove All  Points')
-                # Foreground Text Input
-                with gr.Tab(label='Foreground Text Input') as Tab2:
-                    with gr.Box():
-                        gr.Markdown("Foreground Text Input")
-                        fg_caption = gr.inputs.Textbox(lines=1, default="", label="foreground input text")                   
+    img_dir = 'ir_images/'
+    mask_dir = 'ir_masks/'
+    for img_file in os.listdir(img_dir):
+        img = cv2.imread(os.path.join(img_dir, img_file))
+        selected_points = [] # add if needed
+        mask, alpha, foreground_mask, foreground_alpha, new_bg_1, new_bg_2, new_bg_3 = run_inference(img, selected_points, 10, 10, 0.25, 0.25, '', 0.5, 0.25, 'glass.lens.crystal.diamond.bubble.bulb.web.grid')
+        cv2.imwrite(os.path.join(mask_dir, img_file), mask)
+    # with gr.Blocks() as demo:
+    #     gr.Markdown(
+    #         """
+    #         # <center>Matte Anything🐒 !
+    #         """
+    #     )
+    #     with gr.Row().style(equal_height=True):
+    #         with gr.Column():
+    #             # input image
+    #             original_image = gr.State(value="numpy")   # store original image without points, default None
+    #             input_image = gr.Image(type="numpy", label="Input Image")                             
+    #             # prompt (point or text)
+    #             # Point Input
+    #             with gr.Tab(label='Point Input') as Tab1:
+    #                 with gr.Column():
+    #                     selected_points = gr.State([])      # store points
+    #                     radio = gr.Radio(['foreground_point', 'background_point'], label='Point Labels')
+    #                     with gr.Row():
+    #                         undo_button = gr.Button('Remove Point')
+    #                         undo_all_button = gr.Button('Remove All  Points')
+    #             # Foreground Text Input
+    #             with gr.Tab(label='Foreground Text Input') as Tab2:
+    #                 with gr.Box():
+    #                     gr.Markdown("Foreground Text Input")
+    #                     fg_caption = gr.inputs.Textbox(lines=1, default="", label="foreground input text")                   
                 
                 
-                # run button
-                button = gr.Button("Start!")
+    #             # run button
+    #             button = gr.Button("Start!")
 
-                # Trimap Settings
-                with gr.Tab(label='Trimap Settings'):
-                    gr.Markdown("Trimap Settings")
-                    erode_kernel_size = gr.inputs.Slider(minimum=1, maximum=30, step=1, default=10, label="erode_kernel_size")
-                    dilate_kernel_size = gr.inputs.Slider(minimum=1, maximum=30, step=1, default=10, label="dilate_kernel_size")
+    #             # Trimap Settings
+    #             with gr.Tab(label='Trimap Settings'):
+    #                 gr.Markdown("Trimap Settings")
+    #                 erode_kernel_size = gr.inputs.Slider(minimum=1, maximum=30, step=1, default=10, label="erode_kernel_size")
+    #                 dilate_kernel_size = gr.inputs.Slider(minimum=1, maximum=30, step=1, default=10, label="dilate_kernel_size")
                 
-                # Input Text Settings
-                with gr.Tab(label='Input Text Settings'):
-                    gr.Markdown("Input Text Settings")
-                    fg_box_threshold = gr.inputs.Slider(minimum=0.0, maximum=1.0, step=0.001, default=0.25, label="foreground_box_threshold")
-                    fg_text_threshold = gr.inputs.Slider(minimum=0.0, maximum=1.0, step=0.001, default=0.25, label="foreground_text_threshold")
+    #             # Input Text Settings
+    #             with gr.Tab(label='Input Text Settings'):
+    #                 gr.Markdown("Input Text Settings")
+    #                 fg_box_threshold = gr.inputs.Slider(minimum=0.0, maximum=1.0, step=0.001, default=0.25, label="foreground_box_threshold")
+    #                 fg_text_threshold = gr.inputs.Slider(minimum=0.0, maximum=1.0, step=0.001, default=0.25, label="foreground_text_threshold")
 
-                # Transparency Settings
-                with gr.Tab(label='Transparency Settings'):
-                    gr.Markdown("Transparency Settings")
-                    tr_caption = gr.inputs.Textbox(lines=1, default="glass.lens.crystal.diamond.bubble.bulb.web.grid", label="transparency input text")
-                    tr_box_threshold = gr.inputs.Slider(minimum=0.0, maximum=1.0, step=0.005, default=0.5, label="transparency_box_threshold")
-                    tr_text_threshold = gr.inputs.Slider(minimum=0.0, maximum=1.0, step=0.005, default=0.25, label="transparency_text_threshold")
+    #             # Transparency Settings
+    #             with gr.Tab(label='Transparency Settings'):
+    #                 gr.Markdown("Transparency Settings")
+    #                 tr_caption = gr.inputs.Textbox(lines=1, default="glass.lens.crystal.diamond.bubble.bulb.web.grid", label="transparency input text")
+    #                 tr_box_threshold = gr.inputs.Slider(minimum=0.0, maximum=1.0, step=0.005, default=0.5, label="transparency_box_threshold")
+    #                 tr_text_threshold = gr.inputs.Slider(minimum=0.0, maximum=1.0, step=0.005, default=0.25, label="transparency_text_threshold")
 
             
-            with gr.Column():
+    #         with gr.Column():
 
-                # show the image with mask
-                with gr.Tab(label='SAM Mask'):
-                    mask = gr.Image(type='numpy')
-                # with gr.Tab(label='Trimap'):
-                #     trimap = gr.Image(type='numpy')
-                with gr.Tab(label='Alpha Matte'):
-                    alpha = gr.Image(type='numpy')
-                # show only mask
-                with gr.Tab(label='Foreground by SAM Mask'):
-                    foreground_by_sam_mask = gr.Image(type='numpy')
-                with gr.Tab(label='Refined by ViTMatte'):
-                    refined_by_vitmatte = gr.Image(type='numpy')
-                # with gr.Tab(label='Transparency Detection'):
-                #     transparency = gr.Image(type='numpy')
-                with gr.Tab(label='New Background 1'):
-                    new_bg_1 = gr.Image(type='numpy')
-                with gr.Tab(label='New Background 2'):
-                    new_bg_2 = gr.Image(type='numpy')
-                with gr.Tab(label='New Background 3'):
-                    new_bg_3 = gr.Image(type='numpy')
+    #             # show the image with mask
+    #             with gr.Tab(label='SAM Mask'):
+    #                 mask = gr.Image(type='numpy')
+    #             # with gr.Tab(label='Trimap'):
+    #             #     trimap = gr.Image(type='numpy')
+    #             with gr.Tab(label='Alpha Matte'):
+    #                 alpha = gr.Image(type='numpy')
+    #             # show only mask
+    #             with gr.Tab(label='Foreground by SAM Mask'):
+    #                 foreground_by_sam_mask = gr.Image(type='numpy')
+    #             with gr.Tab(label='Refined by ViTMatte'):
+    #                 refined_by_vitmatte = gr.Image(type='numpy')
+    #             # with gr.Tab(label='Transparency Detection'):
+    #             #     transparency = gr.Image(type='numpy')
+    #             with gr.Tab(label='New Background 1'):
+    #                 new_bg_1 = gr.Image(type='numpy')
+    #             with gr.Tab(label='New Background 2'):
+    #                 new_bg_2 = gr.Image(type='numpy')
+    #             with gr.Tab(label='New Background 3'):
+    #                 new_bg_3 = gr.Image(type='numpy')
 
-        input_image.upload(
-            store_img,
-            [input_image],
-            [original_image, selected_points]
-        )
-        input_image.select(
-            get_point,
-            [input_image, selected_points, radio],
-            [input_image],
-        )
-        undo_button.click(
-            undo_points,
-            [original_image, selected_points],
-            [input_image]
-        )
-        undo_all_button.click(
-            undo_all_points,
-            [original_image, selected_points],
-            [input_image]
-        )
-        Tab1.select(
-            clear_fg_caption,
-            [fg_caption],
-            [fg_caption]
-        )
-        Tab2.select(
-            undo_all_points,
-            [original_image, selected_points],
-            [input_image]
-        )
+    #     input_image.upload(
+    #         store_img,
+    #         [input_image],
+    #         [original_image, selected_points]
+    #     )
+    #     input_image.select(
+    #         get_point,
+    #         [input_image, selected_points, radio],
+    #         [input_image],
+    #     )
+    #     undo_button.click(
+    #         undo_points,
+    #         [original_image, selected_points],
+    #         [input_image]
+    #     )
+    #     undo_all_button.click(
+    #         undo_all_points,
+    #         [original_image, selected_points],
+    #         [input_image]
+    #     )
+    #     Tab1.select(
+    #         clear_fg_caption,
+    #         [fg_caption],
+    #         [fg_caption]
+    #     )
+    #     Tab2.select(
+    #         undo_all_points,
+    #         [original_image, selected_points],
+    #         [input_image]
+    #     )
         
         
-        button.click(run_inference, inputs=[original_image, selected_points, erode_kernel_size, dilate_kernel_size, fg_box_threshold, fg_text_threshold, fg_caption, tr_box_threshold, tr_text_threshold, \
-                                             tr_caption],  outputs=[mask, alpha, foreground_by_sam_mask, refined_by_vitmatte, new_bg_1, new_bg_2, new_bg_3])
+    #     button.click(run_inference, inputs=[original_image, selected_points, erode_kernel_size, dilate_kernel_size, fg_box_threshold, fg_text_threshold, fg_caption, tr_box_threshold, tr_text_threshold, \
+    #                                          tr_caption],  outputs=[mask, alpha, foreground_by_sam_mask, refined_by_vitmatte, new_bg_1, new_bg_2, new_bg_3])
     
-        with gr.Row():
-            with gr.Column():
-                background_image = gr.State(value=None)
+    #     with gr.Row():
+    #         with gr.Column():
+    #             background_image = gr.State(value=None)
 
-    demo.launch()
+    # demo.launch()

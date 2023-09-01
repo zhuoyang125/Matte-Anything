@@ -293,8 +293,8 @@ if __name__ == "__main__":
 
         return  mask, alpha, foreground_mask, foreground_alpha, new_bg_1, new_bg_2, new_bg_3
 
-    img_dir = 'ir_images/'
-    mask_dir = 'ir_masks/'
+    img_dir = '../ir_images/'
+    mask_dir = '../ir_masks/'
     for img_file in os.listdir(img_dir):
         img = cv2.imread(os.path.join(img_dir, img_file))
         selected_points = [] # add if needed
